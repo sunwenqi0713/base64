@@ -10,9 +10,12 @@ static const std::string base64_chars =
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
 
-std::string encode(const std::vector<uint8_t> &data) {
+std::string encode(const uint8_t *data, size_t len) {
+  if (data == nullptr || len == 0) {
+    return "";  // 返回空字符串
+  }
+
   std::string encoded;
-  size_t len = data.size();
   encoded.reserve(((len + 2) / 3) * 4);  // 预分配空间以提高效率
 
   for (size_t i = 0; i < len; i += 3) {
@@ -46,6 +49,8 @@ std::string encode(const std::vector<uint8_t> &data) {
 
   return encoded;
 }
+
+std::string encode(const std::vector<uint8_t> &data) { return encode(data.data(), data.size()); }
 
 std::optional<std::vector<uint8_t>> decode(const std::string &data) {
   // 构建反向查找表（字符 -> 6位值）
@@ -90,6 +95,20 @@ std::optional<std::vector<uint8_t>> decode(const std::string &data) {
   }
 
   return decoded;
+}
+
+bool decode(const std::string &data, uint8_t *output, size_t &sz) {
+  auto decoded = decode(data);
+  if (!decoded) {
+    return false;
+  }
+
+  sz = decoded->size();
+  if (output) {
+    std::copy(decoded->begin(), decoded->end(), output);  // 将解码结果复制到输出缓冲区
+  }
+
+  return true;
 }
 
 }  // namespace base64
